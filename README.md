@@ -1,7 +1,7 @@
 # 🚨 Disaster Management App
 
 A cross-platform Flutter application designed to assist users during disasters by providing essential safety guidelines, emergency contacts, live news updates, and location-based features.
-
+ 
 ## ✨ Features
 
 - 🌓 **Modern UI/UX** - Light and dark theme support
