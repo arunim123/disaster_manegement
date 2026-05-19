@@ -1,10 +1,13 @@
 import 'package:google_generative_ai/google_generative_ai.dart';
 
 class AiService {
-  // IMPORTANT: For a production app, never hardcode API keys. 
-  // Fetch them from a secure backend or use environment variables.
-  // We're leaving this as a placeholder for the user to insert their key.
-  static const String _apiKey = 'AIzaSyBNtJbrIfGNlpu6LyKDpJiOnh-xWhznxXQ';
+  // SETUP INSTRUCTIONS:
+  // 1. Copy this file: `cp lib/services/ai_service.dart.example lib/services/ai_service.dart`
+  // 2. Go to https://aistudio.google.com to generate your Gemini API key.
+  // 3. Paste it below, replacing 'YOUR_GEMINI_API_KEY_HERE'.
+  // 4. The real `ai_service.dart` is in .gitignore so your key stays private.
+  static const String _apiKey = 'YOUR_GEMINI_API_KEY_HERE';
+
   static final _model = GenerativeModel(
     model: 'gemini-2.5-flash',
     apiKey: _apiKey,
@@ -12,7 +15,7 @@ class AiService {
 
   static Future<String> getEmergencyAdvice(String prompt) async {
     if (_apiKey == 'YOUR_GEMINI_API_KEY_HERE' || _apiKey.isEmpty) {
-      return 'API Key not configured. Please add your Gemini API Key in lib/services/ai_service.dart to use this feature.';
+      return 'API Key not configured. Please follow the setup instructions in lib/services/ai_service.dart.example.';
     }
 
     try {
@@ -25,11 +28,11 @@ class AiService {
   }
 
   static Future<String> summarizeNews(List<String> newsItems) async {
-    if (_apiKey == 'YOUR_GEMINI_API_KEY_HERE') {
-      return 'API Key not configured. Please add your Gemini API Key in lib/services/ai_service.dart to use this feature.';
+    if (_apiKey == 'YOUR_GEMINI_API_KEY_HERE' || _apiKey.isEmpty) {
+      return 'API Key not configured. Please follow the setup instructions in lib/services/ai_service.dart.example.';
     }
 
-    final prompt = 'Please summarize the following disaster news headlines and descriptions into a short, 2-3 sentence actionable summary for a civilian. Focus only on the most critical threats.\\n\\n${newsItems.join('\\n')}';
+    final prompt = 'Please summarize the following disaster news headlines and descriptions into a short, 2-3 sentence actionable summary for a civilian. Focus only on the most critical threats.\n\n${newsItems.join('\n')}';
 
     try {
       final response = await _model.generateContent([Content.text(prompt)]);

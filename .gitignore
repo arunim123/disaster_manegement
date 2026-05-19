@@ -43,3 +43,8 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Secrets - Do NOT commit files containing API keys
+# After cloning, copy lib/services/ai_service.dart.example to ai_service.dart
+# and fill in your own key.
+lib/services/ai_service.dart
