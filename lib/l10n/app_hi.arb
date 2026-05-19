@@ -1,0 +1,15 @@
+{
+  "appTitle": "आपदा सहायता",
+  "home": "होम",
+  "sos": "एसओएस (SOS)",
+  "map": "नक्शा",
+  "profile": "प्रोफ़ाइल",
+  "emergencyContacts": "आपातकालीन संपर्क",
+  "guidelines": "दिशानिर्देश",
+  "myLocation": "मेरी लोकेशन",
+  "news": "समाचार",
+  "sosActivated": "एसओएस मोड सक्रिय",
+  "sendSOSDefault": "डिफ़ॉल्ट नंबर (112) और आपके संपर्कों को एसओएस भेजा गया।",
+  "primarySOSNumber": "प्राथमिक एसओएस नंबर",
+  "customSOSMessage": "कस्टम एसओएस संदेश"
+}

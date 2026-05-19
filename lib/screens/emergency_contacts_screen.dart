@@ -18,12 +18,12 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
   static const String _defaultSOSMessage = 'HELP! I am in an emergency. My current location is: {LOCATION_URL}';
 
   final List<EmergencyContact> _predefinedContacts = [
+    const EmergencyContact(name: 'National Emergency', phoneNumber: '112'),
     const EmergencyContact(name: 'Police', phoneNumber: '100'),
-    const EmergencyContact(name: 'Ambulance', phoneNumber: '108'),
     const EmergencyContact(name: 'Fire Brigade', phoneNumber: '101'),
-    const EmergencyContact(name: 'National Disaster Helpline', phoneNumber: '1075'),
+    const EmergencyContact(name: 'Ambulance', phoneNumber: '102'),
+    const EmergencyContact(name: 'NDRF (Disaster Response)', phoneNumber: '1078'),
   ];
-
   List<EmergencyContact> _userContacts = [];
   List<EmergencyContact> _allContacts = [];
   bool _isLoading = true;

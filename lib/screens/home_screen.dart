@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:disaster_management_app/screens/emergency_contacts_screen.dart';
 import 'package:disaster_management_app/screens/user_location_screen.dart';
@@ -5,9 +6,13 @@ import 'package:disaster_management_app/screens/news_updates_screen.dart';
 import 'package:disaster_management_app/screens/safety_guidelines_screen.dart';
 import 'package:disaster_management_app/screens/settings_screen.dart';
 import 'package:disaster_management_app/screens/profile_screen.dart';
+import 'package:disaster_management_app/screens/ai_chatbot_screen.dart';
+import 'package:disaster_management_app/screens/emergency_checklist_screen.dart';
+import 'package:disaster_management_app/screens/visual_sos_screen.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -82,8 +87,28 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     final prefs = await SharedPreferences.getInstance();
-    String emergencyNumber = prefs.getString('primary_sos_number') ?? '100';
-    bool isDefaultNumber = emergencyNumber == '100';
+    String emergencyNumber = prefs.getString('primary_sos_number') ?? '112';
+    bool isDefaultNumber = emergencyNumber == '112';
+
+    // Fetch all user contacts
+    List<String> recipients = [];
+    final String? userContactsJson = prefs.getString('user_emergency_contacts');
+    if (userContactsJson != null) {
+      try {
+        final List<dynamic> decoded = jsonDecode(userContactsJson);
+        recipients = decoded.map((e) => e['phoneNumber'].toString()).toList();
+      } catch (e) {
+        // Ignore JSON error
+      }
+    }
+
+    if (!recipients.contains(emergencyNumber)) {
+      recipients.insert(0, emergencyNumber);
+    }
+
+    // Create separator based on platform
+    String separator = Theme.of(context).platform == TargetPlatform.iOS ? ',' : ';';
+    String phoneNumbers = recipients.join(separator);
 
     const String defaultSOSMessage = 'HELP! I am in an emergency. My current location is: {LOCATION_URL}';
     String sosMessageTemplate = prefs.getString('custom_sos_message') ?? defaultSOSMessage;
@@ -97,7 +122,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
       final Uri smsUri = Uri(
         scheme: 'sms',
-        path: emergencyNumber,
+        path: phoneNumbers,
         queryParameters: <String, String>{'body': message},
       );
 
@@ -106,7 +131,7 @@ class _HomeScreenState extends State<HomeScreen> {
         if (context.mounted && isDefaultNumber) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text('SOS sent to default number (100). Consider setting a primary SOS contact in Emergency Contacts.'),
+              content: const Text('SOS sent to default number (112) and your contacts. Consider setting a primary SOS contact.'),
               duration: const Duration(seconds: 5),
               action: SnackBarAction(
                 label: 'SETTINGS',
@@ -143,6 +168,20 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _navigateToChecklist(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const EmergencyChecklistScreen()),
+    );
+  }
+
+  void _navigateToVisualSos(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const VisualSosScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // Create screens list here, not in initState
@@ -155,7 +194,7 @@ class _HomeScreenState extends State<HomeScreen> {
     
     return Scaffold(
       appBar: _currentIndex != 3 ? AppBar(
-        title: const Text('Disaster Management'),
+        title: Text(AppLocalizations.of(context)?.appTitle ?? 'Disaster Management'),
         centerTitle: true,
         backgroundColor: Colors.deepOrange,
         foregroundColor: Colors.white,
@@ -183,25 +222,37 @@ class _HomeScreenState extends State<HomeScreen> {
         selectedItemColor: Colors.amber,
         unselectedItemColor: Colors.white70,
         type: BottomNavigationBarType.fixed,
-        items: const [
+        items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
+            icon: const Icon(Icons.home),
+            label: AppLocalizations.of(context)?.home ?? 'Home',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.notifications_active),
-            label: 'SOS',
+            icon: const Icon(Icons.notifications_active),
+            label: AppLocalizations.of(context)?.sos ?? 'SOS',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.location_on),
-            label: 'Map',
+            icon: const Icon(Icons.location_on),
+            label: AppLocalizations.of(context)?.map ?? 'Map',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
+            icon: const Icon(Icons.person),
+            label: AppLocalizations.of(context)?.profile ?? 'Profile',
           ),
         ],
       ),
+      floatingActionButton: _currentIndex == 0 ? FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const AiChatbotScreen()),
+          );
+        },
+        icon: const Icon(Icons.smart_toy),
+        label: const Text('Ask AI'),
+        backgroundColor: Colors.deepOrange,
+        foregroundColor: Colors.white,
+      ) : null,
     );
   }
 
@@ -262,9 +313,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                       const SizedBox(height: 10),
-                      const Text(
-                        'SOS',
-                        style: TextStyle(
+                      Text(
+                        AppLocalizations.of(context)?.sos.toUpperCase() ?? 'SOS',
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 40,
                           fontWeight: FontWeight.bold,
@@ -283,35 +334,48 @@ class _HomeScreenState extends State<HomeScreen> {
                 childAspectRatio: 1.25,
                 crossAxisSpacing: 20,
                 mainAxisSpacing: 20,
-                physics: const NeverScrollableScrollPhysics(),
                 children: [
-                  // Emergency Contacts
+                   // Emergency Contacts
                   _buildFeatureCard(
-                    title: 'Emergency\nContacts',
+                    title: AppLocalizations.of(context)?.emergencyContacts ?? 'Emergency\nContacts',
                     icon: Icons.phone,
                     color: Colors.pink,
                     onTap: () => _navigateToEmergencyContacts(context),
                   ),
                   // Guidelines
                   _buildFeatureCard(
-                    title: 'Guidelines',
+                    title: AppLocalizations.of(context)?.guidelines ?? 'Guidelines',
                     icon: Icons.shield,
                     color: Colors.blue,
                     onTap: () => _navigateToSafetyGuidelines(context),
                   ),
                   // My Location
                   _buildFeatureCard(
-                    title: 'My Location',
+                    title: AppLocalizations.of(context)?.myLocation ?? 'My Location',
                     icon: Icons.location_on,
                     color: Colors.amber,
                     onTap: () => _navigateToUserLocation(context),
                   ),
                   // News
                   _buildFeatureCard(
-                    title: 'News',
+                    title: AppLocalizations.of(context)?.news ?? 'News',
                     icon: Icons.article_outlined,
                     color: Colors.teal,
                     onTap: () => _navigateToNewsUpdates(context),
+                  ),
+                  // Emergency Checklist
+                  _buildFeatureCard(
+                    title: 'Checklist',
+                    icon: Icons.checklist,
+                    color: Colors.indigo,
+                    onTap: () => _navigateToChecklist(context),
+                  ),
+                  // Visual SOS
+                  _buildFeatureCard(
+                    title: 'Visual SOS',
+                    icon: Icons.flashlight_on,
+                    color: Colors.redAccent,
+                    onTap: () => _navigateToVisualSos(context),
                   ),
                 ],
               ),
@@ -338,10 +402,10 @@ class _HomeScreenState extends State<HomeScreen> {
               : [Colors.pink.shade900, Colors.deepPurple.shade900],
         ),
       ),
-      child: const Center(
+      child: Center(
         child: Text(
-          'SOS mode activated',
-          style: TextStyle(
+          AppLocalizations.of(context)?.sosActivated ?? 'SOS mode activated',
+          style: const TextStyle(
             color: Colors.white,
             fontSize: 24,
             fontWeight: FontWeight.bold,

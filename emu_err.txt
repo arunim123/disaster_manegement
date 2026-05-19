@@ -1,0 +1,36 @@
+﻿flutter : The Android 
+emulator exited with 
+code 1 during startup
+At line:1 char:1
++ flutter emulators 
+--launch 
+Pixel_6_Pro_API_33 
+2>&1 | Out-File 
+-Encodi ...
++ ~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~
+    + CategoryInfo    
+          : 
+NotSpecified: (T    
+he Android emu... dur 
+   ing 
+startup:String) [    
+], RemoteException
+    + 
+FullyQualifiedError   
+ Id : 
+NativeCommandErr    or
+ 
+Android emulator 
+stderr:
+ERROR   | Running 
+multiple emulators 
+with the same AVD 
+ERROR   | is an 
+experimental feature.
+ERROR   | Please use 
+-read-only flag to 
+enable this feature.
+Address these issues 
+and try again.

@@ -1,0 +1,15 @@
+{
+  "appTitle": "Crisis Assist",
+  "home": "Home",
+  "sos": "SOS",
+  "map": "Map",
+  "profile": "Profile",
+  "emergencyContacts": "Emergency Contacts",
+  "guidelines": "Guidelines",
+  "myLocation": "My Location",
+  "news": "News",
+  "sosActivated": "SOS mode activated",
+  "sendSOSDefault": "SOS sent to default number (112) and your contacts.",
+  "primarySOSNumber": "Primary SOS Number",
+  "customSOSMessage": "Custom SOS Message"
+}

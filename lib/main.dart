@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:disaster_management_app/screens/home_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:disaster_management_app/providers/theme_provider.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,7 +24,9 @@ class MyApp extends StatelessWidget {
     final themeProvider = Provider.of<ThemeProvider>(context);
     
     return MaterialApp(
-      title: 'Crisis Assist',
+      onGenerateTitle: (context) => AppLocalizations.of(context)?.appTitle ?? 'Crisis Assist',
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       theme: _buildLightTheme(),
       darkTheme: _buildDarkTheme(),
       themeMode: themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,

@@ -1,7 +1,10 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:webfeed_plus/webfeed_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../services/ai_service.dart';
 
 class NewsUpdatesScreen extends StatefulWidget {
   const NewsUpdatesScreen({super.key});
@@ -11,7 +14,7 @@ class NewsUpdatesScreen extends StatefulWidget {
 }
 
 class _NewsUpdatesScreenState extends State<NewsUpdatesScreen> {
-  final String _feedUrl = 'https://www.fema.gov/feeds/news_releases.rss';
+  final String _feedUrl = 'https://news.google.com/rss/search?q=disaster+OR+earthquake+OR+flood+india&hl=en-IN&gl=IN&ceid=IN:en';
   RssFeed? _feed;
   bool _isLoading = true;
   String? _errorMessage;
@@ -27,32 +30,56 @@ class _NewsUpdatesScreenState extends State<NewsUpdatesScreen> {
       _isLoading = true;
       _errorMessage = null;
     });
+
+    final prefs = await SharedPreferences.getInstance();
+    
     try {
-      final response = await http.get(Uri.parse(_feedUrl));
-      if (mounted) { // Ensure mounted before further setState calls
+      final response = await http.get(Uri.parse(_feedUrl)).timeout(const Duration(seconds: 10));
+      if (mounted) { 
         if (response.statusCode == 200) {
-          print('News Feed Response Body: ${response.body.substring(0, (response.body.length < 500) ? response.body.length : 500)}...'); // Log first 500 chars or less
           try {
             _feed = RssFeed.parse(response.body);
+            // Cache the successful XML string
+            await prefs.setString('cached_news_feed', response.body);
           } catch (e) {
-            print('Error parsing RSS feed: $e');
             _errorMessage = 'Error parsing feed content.';
           }
         } else {
-          print('Failed to load RSS feed. Status code: ${response.statusCode}');
-          print('Response body: ${response.body}');
           _errorMessage = 'Failed to load RSS feed: Status code ${response.statusCode}';
+          await _loadCachedNews(prefs);
         }
       }
     } catch (e) {
       if (mounted) {
-        _errorMessage = 'Error fetching or parsing feed: ${e.toString()}';
+        // Network error, try to load cache
+        await _loadCachedNews(prefs);
+        if (_feed == null) {
+           _errorMessage = 'No internet connection and no cached news available.';
+        } else {
+           // We have cached news, clear error to show the cached list
+           _errorMessage = null;
+           ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Offline mode: Showing cached news.')),
+           );
+        }
       }
     }
+    
     if (mounted) {
       setState(() {
         _isLoading = false;
       });
+    }
+  }
+
+  Future<void> _loadCachedNews(SharedPreferences prefs) async {
+    final cachedXml = prefs.getString('cached_news_feed');
+    if (cachedXml != null) {
+      try {
+        _feed = RssFeed.parse(cachedXml);
+      } catch (e) {
+        _feed = null;
+      }
     }
   }
 
@@ -81,7 +108,7 @@ class _NewsUpdatesScreenState extends State<NewsUpdatesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('FEMA News Releases'),
+        title: const Text('Disaster News (India)'),
         actions: [
           Semantics(
             label: 'Refresh news feed button',
@@ -94,7 +121,68 @@ class _NewsUpdatesScreenState extends State<NewsUpdatesScreen> {
         ],
       ),
       body: _buildBody(context),
+      floatingActionButton: _feed != null && _feed!.items != null && _feed!.items!.isNotEmpty
+          ? FloatingActionButton.extended(
+              onPressed: _summarizeNewsWithAi,
+              icon: const Icon(Icons.auto_awesome),
+              label: const Text('Summarize AI'),
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Colors.white,
+            )
+          : null,
     );
+  }
+
+  Future<void> _summarizeNewsWithAi() async {
+    if (_feed == null || _feed!.items == null) return;
+    
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.auto_awesome, color: Colors.deepOrange),
+            SizedBox(width: 8),
+            Text('AI Summary'),
+          ],
+        ),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text('Analyzing latest updates...'),
+          ],
+        ),
+      ),
+    );
+
+    final items = _feed!.items!.take(5).map((e) => '${e.title}: ${e.description ?? ""}').toList();
+    final summary = await AiService.summarizeNews(items);
+
+    if (mounted) {
+      Navigator.pop(context); // close loading dialog
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.auto_awesome, color: Colors.deepOrange),
+              SizedBox(width: 8),
+              Text('AI Summary'),
+            ],
+          ),
+          content: Text(summary),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Close'),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   Widget _buildBody(BuildContext context) {
