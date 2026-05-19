@@ -120,8 +120,15 @@ class _UserLocationScreenState extends State<UserLocationScreen> {
       setState(() {
         _currentPosition = LatLng(position.latitude, position.longitude);
         _isLoading = false;
-        if (_currentPosition != null) {
+      });
+      // Delay the map movement to allow FlutterMap to build first
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _currentPosition != null) {
+          try {
             _mapController.move(_currentPosition!, 15.0);
+          } catch (e) {
+            // Map controller might not be ready on first load, initialCenter handles this.
+          }
         }
       });
     } catch (e) {

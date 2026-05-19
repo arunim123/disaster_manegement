@@ -3,7 +3,7 @@ import 'package:disaster_management_app/screens/home_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:disaster_management_app/providers/theme_provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:disaster_management_app/l10n/app_localizations.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -93,7 +93,7 @@ class MyApp extends StatelessWidget {
       ),
       
       // Card theme
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         elevation: 5.0,
         margin: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
@@ -195,7 +195,7 @@ class MyApp extends StatelessWidget {
       ),
       
       // Card theme
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         elevation: 5.0,
         margin: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
